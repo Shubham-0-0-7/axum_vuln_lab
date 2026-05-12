@@ -1,50 +1,26 @@
+mod vulnerable;
+mod fixed;
+
 use axum::{
-    response::Html,
-    Router,
     routing::{get, post},
-    extract::Form,
+    Router,
 };
 
 #[tokio::main]
 async fn main() {
     let app = Router::new()
-        .route("/", get(index))
-        .route("/login", post(login))
-        .route("/search", get(search));
+        .route("/", get(vulnerable::index))
+        .route("/search", get(vulnerable::search))
+        .route("/search-safe", get(fixed::search_safe))
+
+        .route("/login", post(vulnerable::login))
+        .route("/login-safe", post(fixed::login_safe));
 
     let listener = tokio::net::TcpListener::bind("127.0.0.1:3000")
         .await
         .unwrap();
+
     println!("Server running on http://127.0.0.1:3000");
+
     axum::serve(listener, app).await.unwrap();
-}
-
-async fn index() -> Html<&'static str> {
-    Html(r#"
-        <h1>Login</h1>
-
-        <form action="/login" method="POST">
-            <input name="username" placeholder="Username">
-            <input name="password" type="password" placeholder="Password">
-
-            <button type="submit">Login</button>
-        </form>
-    "#)
-}
-
-#[derive(serde::Deserialize)]
-struct Input{
-    username:String,
-    password:String,
-}
-async fn login(Form(input):Form<Input>) -> String {
-    format!(
-        "username: {}, password: {}",
-        input.username,
-        input.password,
-    )
-}
-
-async fn search() -> &'static str {
-    "Search handler stub"
 }

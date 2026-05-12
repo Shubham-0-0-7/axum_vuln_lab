@@ -1,0 +1,37 @@
+<h1>Login</h1>
+
+<h3>Vulnerable Login</h3>
+
+<form action="/login" method="POST">
+    <input name="username" placeholder="Username">
+    <input name="password" type="password" placeholder="Password">
+
+    <button type="submit">
+        Vulnerable Login
+    </button>
+</form>
+
+<hr>
+
+<h3>Secure Login</h3>
+
+<form action="/login-safe" method="POST">
+    <input name="username" placeholder="Username">
+    <input name="password" type="password" placeholder="Password">
+
+    <button type="submit">
+        Secure Login
+    </button>
+</form>
+
+<hr>
+
+<a href="/search">
+    Vulnerable Search
+</a>
+
+<br><br>
+
+<a href="/search-safe">
+    Secure Search
+</a>
