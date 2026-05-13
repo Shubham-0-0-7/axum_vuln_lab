@@ -11,9 +11,9 @@ pub async fn index() -> Html<&'static str> {
     Html(include_str!("../templates/index.html"))
 }
 
-pub async fn admin() -> Html<&'static str> {
-    Html(include_str!("../templates/admin.html"))
-}
+// pub async fn admin() -> Html<&'static str> {
+//     Html(include_str!("../templates/admin.html"))
+// }
 
 #[derive(Deserialize)]
 pub struct Input {
