@@ -17,8 +17,8 @@ async fn main() {
 
         .route("/login", post(sqli::login))
         .route("/login-safe", post(sqlifixed::login_safe))
-        .route("/xss", get(xss::xss));
-        // .route("/xss-safe", get(xss::xss_safe));
+        .route("/xss", get(xss::xss))
+        .route("/xss-safe", get(xssfixed::xss_safe));
 
     let listener = tokio::net::TcpListener::bind("127.0.0.1:3000")
         .await
