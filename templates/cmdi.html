@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+    <h1>command injection</h1>
+    <form action="/cmdi/ping" method="post">
+        <label for="host">Host:</label>
+        <input type="text" id="host" name="host">
+        <button type="submit">Ping</button>
+    </form>
+
+    <h1>fixed</h1>
+    <form action="/cmdifixed/ping" method="post">.
+        <label for="host">Host: </label>
+        <input type="text" id="host" name="host">
+        <button type="submit">Ping</button>
+    </form>
+</html>

@@ -7,7 +7,6 @@ pub async fn cors_page() -> Html<&'static str> {
 }
 
 pub async fn get_resources() -> (HeaderMap, &'static str) {
-    // r#"{"message": "hello from the api server"}"#
     let mut headers = HeaderMap::new();
     headers.insert("Access-Control-Allow-Origin", HeaderValue::from_static("*"));
     //new concept learnt 
