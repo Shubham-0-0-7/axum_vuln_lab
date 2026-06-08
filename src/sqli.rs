@@ -105,7 +105,7 @@ pub async fn search(
 
             output
         }
-
+        
         Err(err) => format!("SQL Error: {}", err),
     }
 }
