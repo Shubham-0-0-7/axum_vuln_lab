@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Secure CORS Lab</title>
+</head>
+<body>
+    <h1>Secure CORS Lab (Fixed)</h1>
+
+    <h3>Simple Request (GET)</h3>
+    <button onclick="simpleRequest()">Fetch Resource (Safe)</button>
+
+    <h3>Preflighted Request (PUT)</h3>
+    <button onclick="preflightRequest()">Update Resource (Safe)</button>
+
+    <h3>Result:</h3>
+    <pre id="output">Click the button...</pre>
+
+    <script>
+        async function simpleRequest() {
+            try {
+                const res = await fetch("http://127.0.0.1:3001/api/safe-resource");
+                const data = await res.text();
+                document.getElementById("output").textContent = data;
+            } catch (err) {
+                document.getElementById("output").textContent = "CORS Error: " + err.message;
+            }
+        }
+
+        async function preflightRequest() {
+            try {
+                const res = await fetch("http://127.0.0.1:3001/api/safe-resource", {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ name: "Hacker" })
+                });
+                const data = await res.text();
+                document.getElementById("output").textContent = data;
+            } catch (err) {
+                document.getElementById("output").textContent = "Preflight CORS Error: " + err.message;
+            }
+        }
+    </script>
+</body>
+</html>

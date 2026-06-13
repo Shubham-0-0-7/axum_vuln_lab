@@ -33,7 +33,10 @@ pub async fn start_api_server() {
     let api_router = Router::new().route("/api/resource", 
      get(get_resources)
     .put(update_resources)
-    .options(handle_options));
+    .options(handle_options))
+    .route("/api/safe-resource", get(crate::corsfixed::get_resources_safe)
+    .put(crate::corsfixed::update_resources_safe)
+    .options(crate::corsfixed::handle_options_safe));
     let listener = TcpListener::bind("127.0.0.1:3001").await.unwrap();
     println!("API Server running on http://127.0.0.1:3001");
     axum::serve(listener, api_router).await.unwrap();

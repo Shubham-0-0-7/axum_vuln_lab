@@ -3,6 +3,7 @@ mod sqlifixed;
 mod xss;
 mod xssfixed;
 mod cors;
+mod corsfixed;
 mod cmdi;
 mod cmdifixed;
 
@@ -23,6 +24,7 @@ async fn main() {
         .route("/xss", get(xss::xss))
         .route("/xss-safe", get(xssfixed::xss_safe))
         .route("/cors", get(cors::cors_page))
+        .route("/corsfixed", get(corsfixed::corsfixed_page))
         .route("/cmdi", get(cmdi::cmdi_page))
         .route("/cmdi/ping", post(cmdi::ping))
         .route("/cmdifixed", get(cmdifixed::cmdifixed_page))
