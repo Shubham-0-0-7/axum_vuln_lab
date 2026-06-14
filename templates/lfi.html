@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>LFI / Path Traversal Lab</title>
+    <style>
+        .container { display: flex; gap: 20px; margin-top: 20px; }
+        .box { flex: 1; border: 1px solid #ccc; padding: 15px; background: #f9f9f9; border-radius: 4px; }
+        pre { white-space: pre-wrap; background: #eee; padding: 10px; border-radius: 4px; max-height: 400px; overflow-y: auto; }
+        .error { color: red; font-weight: bold; }
+        .success { color: green; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>Local File Inclusion (LFI) / Path Traversal Lab</h1>
+
+    <h3>Quick Load Options:</h3>
+    <button onclick="loadFile('admin.html')">Load admin.html</button>
+    <button onclick="loadFile('search.html')">Load search.html</button>
+    
+    <h3>Test Custom/Traversal Path:</h3>
+    <input type="text" id="filepath" placeholder="e.g. ../Cargo.toml" style="width: 300px; padding: 5px;">
+    <button onclick="loadCustomFile()">Fetch File</button>
+
+    <div class="container">
+        <!-- Vulnerable Output -->
+        <div class="box">
+            <h2>Vulnerable Endpoint Output</h2>
+            <p>Queries: <code>/lfi/read?file=...</code></p>
+            <pre id="vuln-output">No file loaded yet...</pre>
+        </div>
+
+        <!-- Secure Output -->
+        <div class="box">
+            <h2>Secure Endpoint Output</h2>
+            <p>Queries: <code>/lfi-safe/read?file=...</code></p>
+            <pre id="safe-output">No file loaded yet...</pre>
+        </div>
+    </div>
+
+    <script>
+        async function loadFile(filename) {
+            document.getElementById("filepath").value = filename;
+            await fetchFiles(filename);
+        }
+
+        async function loadCustomFile() {
+            const path = document.getElementById("filepath").value;
+            if (!path) return;
+            await fetchFiles(path);
+        }
+
+        async function fetchFiles(path) {
+            // 1. Fetch from vulnerable endpoint
+            try {
+                const vulnRes = await fetch(`/lfi/read?file=${encodeURIComponent(path)}`);
+                const vulnText = await vulnRes.text();
+                const vulnPre = document.getElementById("vuln-output");
+                vulnPre.textContent = vulnText;
+                if (vulnRes.ok && !vulnText.startsWith("Error reading file")) {
+                    vulnPre.className = "success";
+                } else {
+                    vulnPre.className = "error";
+                }
+            } catch (err) {
+                document.getElementById("vuln-output").textContent = "Fetch Error: " + err.message;
+                document.getElementById("vuln-output").className = "error";
+            }
+
+            // 2. Fetch from secure endpoint
+            try {
+                const safeRes = await fetch(`/lfi-safe/read?file=${encodeURIComponent(path)}`);
+                const safeText = await safeRes.text();
+                const safePre = document.getElementById("safe-output");
+                safePre.textContent = safeText;
+                if (safeRes.ok) {
+                    safePre.className = "success";
+                } else {
+                    safePre.className = "error";
+                }
+            } catch (err) {
+                document.getElementById("safe-output").textContent = "Fetch Error: " + err.message;
+                document.getElementById("safe-output").className = "error";
+            }
+        }
+    </script>
+</body>
+</html>

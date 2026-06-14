@@ -6,6 +6,8 @@ mod cors;
 mod corsfixed;
 mod cmdi;
 mod cmdifixed;
+mod lfi;
+mod lfifixed;
 
 use axum::{
     routing::{get, post},
@@ -18,7 +20,6 @@ async fn main() {
         .route("/", get(sqli::index))
         .route("/search", get(sqli::search))
         .route("/search-safe", get(sqlifixed::search_safe))
-
         .route("/login", post(sqli::login))
         .route("/login-safe", post(sqlifixed::login_safe))
         .route("/xss", get(xss::xss))
@@ -28,7 +29,10 @@ async fn main() {
         .route("/cmdi", get(cmdi::cmdi_page))
         .route("/cmdi/ping", post(cmdi::ping))
         .route("/cmdifixed", get(cmdifixed::cmdifixed_page))
-        .route("/cmdifixed/ping", post(cmdifixed::ping_safe));
+        .route("/cmdifixed/ping", post(cmdifixed::ping_safe))
+        .route("/lfi", get(lfi::lfi_page))
+        .route("/lfi/read", get(lfi::read_file))
+        .route("/lfi-safe/read", get(lfifixed::read_file_safe));
     let listener = tokio::net::TcpListener::bind("127.0.0.1:3000")
         .await
         .unwrap();
