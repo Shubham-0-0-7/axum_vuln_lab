@@ -1,37 +1,119 @@
-<h1>Login</h1>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SQLi Login Lab</title>
+    <style>
+        .container { display: flex; gap: 20px; margin-top: 20px; }
+        .box { flex: 1; border: 1px solid #ccc; padding: 15px; background: #f9f9f9; border-radius: 4px; }
+        pre { white-space: pre-wrap; background: #eee; padding: 10px; border-radius: 4px; max-height: 400px; overflow-y: auto; font-family: monospace; }
+        .error { color: red; font-weight: bold; }
+        .success { color: green; font-weight: bold; }
+        .nav-links { margin-bottom: 20px; }
+        .nav-links a { margin-right: 15px; text-decoration: none; font-weight: bold; color: #0066cc; }
+    </style>
+</head>
+<body>
+    <div class="nav-links">
+        <a href="/">SQLi Login</a>
+        <a href="/search">SQLi Search</a>
+        <a href="/xss">XSS Lab</a>
+        <a href="/cors">CORS Lab</a>
+        <a href="/cmdi">CMDi Lab</a>
+        <a href="/lfi">LFI Lab</a>
+    </div>
 
-<h3>Vulnerable Login</h3>
+    <h1>SQL Injection (SQLi) - Authentication Bypass Lab</h1>
 
-<form action="/login" method="POST">
-    <input name="username" placeholder="Username">
-    <input name="password" type="password" placeholder="Password">
+    <h3>Quick Load Exploit Payload:</h3>
+    <button onclick="fillForm('admin', 'password')">Normal User (admin)</button>
+    <button onclick="fillForm('\' OR \'1\'=\'1', 'anything')">Inject Payload: ' OR '1'='1</button>
+    <button onclick="fillForm('admin\' --', 'anything')">Inject Payload: admin' --</button>
+    
+    <br><br>
 
-    <button type="submit">
-        Vulnerable Login
-    </button>
-</form>
+    <div style="background: #eef; padding: 15px; border-radius: 4px; margin-bottom: 20px; width: 400px;">
+        <h3>Login Credentials</h3>
+        <label for="username">Username:</label>
+        <input type="text" id="username" placeholder="Username" style="width: 100%; padding: 5px; margin-bottom: 10px;"><br>
+        <label for="password">Password:</label>
+        <input type="password" id="password" placeholder="Password" style="width: 100%; padding: 5px; margin-bottom: 10px;"><br>
+        <button onclick="runLogin()" style="width: 100%; padding: 10px; font-weight: bold;">Attempt Logins</button>
+    </div>
 
-<hr>
+    <div class="container">
+        <!-- Vulnerable Output -->
+        <div class="box">
+            <h2>Vulnerable Endpoint Output</h2>
+            <p>Target: <code>POST /login</code> (Concatenated String Query)</p>
+            <pre id="vuln-output">Submit login to see results...</pre>
+        </div>
 
-<h3>Secure Login</h3>
+        <!-- Secure Output -->
+        <div class="box">
+            <h2>Secure Endpoint Output</h2>
+            <p>Target: <code>POST /login-safe</code> (Parameterized Query)</p>
+            <pre id="safe-output">Submit login to see results...</pre>
+        </div>
+    </div>
 
-<form action="/login-safe" method="POST">
-    <input name="username" placeholder="Username">
-    <input name="password" type="password" placeholder="Password">
+    <script>
+        function fillForm(user, pass) {
+            document.getElementById("username").value = user;
+            document.getElementById("password").value = pass;
+            runLogin();
+        }
 
-    <button type="submit">
-        Secure Login
-    </button>
-</form>
+        async function runLogin() {
+            const user = document.getElementById("username").value;
+            const pass = document.getElementById("password").value;
 
-<hr>
+            document.getElementById("vuln-output").textContent = "Submitting to vulnerable login...";
+            document.getElementById("safe-output").textContent = "Submitting to secure login...";
 
-<a href="/search">
-    Vulnerable Search
-</a>
+            const bodyParams = new URLSearchParams();
+            bodyParams.append("username", user);
+            bodyParams.append("password", pass);
 
-<br><br>
+            // 1. Fetch from vulnerable endpoint
+            try {
+                const vulnRes = await fetch("/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                    body: bodyParams
+                });
+                const vulnText = await vulnRes.text();
+                const pre = document.getElementById("vuln-output");
+                pre.textContent = vulnText;
+                if (vulnText.includes("Successful")) {
+                    pre.className = "success";
+                } else {
+                    pre.className = "error";
+                }
+            } catch (err) {
+                document.getElementById("vuln-output").textContent = "Error: " + err.message;
+                document.getElementById("vuln-output").className = "error";
+            }
 
-<a href="/search-safe">
-    Secure Search
-</a>
+            // 2. Fetch from secure endpoint
+            try {
+                const safeRes = await fetch("/login-safe", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                    body: bodyParams
+                });
+                const safeText = await safeRes.text();
+                const pre = document.getElementById("safe-output");
+                pre.textContent = safeText;
+                if (safeText.includes("Successful")) {
+                    pre.className = "success";
+                } else {
+                    pre.className = "error";
+                }
+            } catch (err) {
+                document.getElementById("safe-output").textContent = "Error: " + err.message;
+                document.getElementById("safe-output").className = "error";
+            }
+        }
+    </script>
+</body>
+</html>

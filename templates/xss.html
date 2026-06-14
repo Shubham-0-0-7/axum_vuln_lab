@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>XSS / Cross-Site Scripting Lab</title>
+    <style>
+        .container { display: flex; gap: 20px; margin-top: 20px; }
+        .box { flex: 1; border: 1px solid #ccc; padding: 15px; background: #f9f9f9; border-radius: 4px; }
+        iframe { width: 100%; height: 300px; border: 1px dashed #777; background: #fff; border-radius: 4px; }
+        .nav-links { margin-bottom: 20px; }
+        .nav-links a { margin-right: 15px; text-decoration: none; font-weight: bold; color: #0066cc; }
+    </style>
+</head>
+<body>
+    <div class="nav-links">
+        <a href="/">SQLi Login</a>
+        <a href="/search">SQLi Search</a>
+        <a href="/xss">XSS Lab</a>
+        <a href="/cors">CORS Lab</a>
+        <a href="/cmdi">CMDi Lab</a>
+        <a href="/lfi">LFI Lab</a>
+    </div>
+
+    <h1>Cross-Site Scripting (XSS) Lab</h1>
+
+    <h3>Quick Load Options:</h3>
+    <button onclick="setPayload('Hello World')">Normal Text</button>
+    <button onclick="setPayload('<script>alert(\'XSS Exploit!\')</script>')">Inject: &lt;script&gt; Alert</button>
+    <button onclick="setPayload('<img src=x onerror=alert(\'Img Error XSS\')>')">Inject: Image OnError</button>
+    <button onclick="setPayload('<h1 style=\'color:red; font-size:40px;\'>HTML Injection</h1>')">Inject: Raw HTML</button>
+
+    <br><br>
+
+    <label for="payload" style="font-weight: bold;">Enter XSS Payload: </label>
+    <input type="text" id="payload" placeholder="e.g. <script>alert(1)</script>" style="width: 350px; padding: 5px;">
+    <button onclick="runXss()">Submit Payload</button>
+
+    <div class="container">
+        <!-- Vulnerable Output -->
+        <div class="box">
+            <h2>Vulnerable Endpoint (Reflected XSS)</h2>
+            <p>Target: <code>/xss/reflect?q=...</code> (Unescaped output)</p>
+            <!-- Sandboxed iframe to prevent the alert from breaking the lab session itself, but allowing scripts to execute -->
+            <iframe id="vuln-frame" sandbox="allow-scripts allow-modals"></iframe>
+        </div>
+
+        <!-- Secure Output -->
+        <div class="box">
+            <h2>Secure Endpoint (Sanitized/Escaped)</h2>
+            <p>Target: <code>/xss-safe/reflect?q=...</code> (HTML Entities encoded)</p>
+            <iframe id="safe-frame" sandbox="allow-scripts allow-modals"></iframe>
+        </div>
+    </div>
+
+    <script>
+        function setPayload(val) {
+            document.getElementById("payload").value = val;
+            runXss();
+        }
+
+        function runXss() {
+            const payload = document.getElementById("payload").value;
+            if (!payload) return;
+
+            // Load the endpoints inside iframes
+            document.getElementById("vuln-frame").src = `/xss/reflect?q=${encodeURIComponent(payload)}`;
+            document.getElementById("safe-frame").src = `/xss-safe/reflect?q=${encodeURIComponent(payload)}`;
+        }
+    </script>
+</body>
+</html>

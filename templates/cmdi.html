@@ -1,16 +1,83 @@
 <!DOCTYPE html>
 <html>
-    <h1>command injection</h1>
-    <form action="/cmdi/ping" method="post">
-        <label for="host">Host:</label>
-        <input type="text" id="host" name="host">
-        <button type="submit">Ping</button>
-    </form>
+<head>
+    <title>CMDi / Command Injection Lab</title>
+    <style>
+        .container { display: flex; gap: 20px; margin-top: 20px; }
+        .box { flex: 1; border: 1px solid #ccc; padding: 15px; background: #f9f9f9; border-radius: 4px; }
+        pre { white-space: pre-wrap; background: #eee; padding: 10px; border-radius: 4px; max-height: 400px; overflow-y: auto; font-family: monospace; }
+        .error { color: red; font-weight: bold; }
+        .success { color: green; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>Command Injection (CMDi) Lab</h1>
 
-    <h1>fixed</h1>
-    <form action="/cmdifixed/ping" method="post">.
-        <label for="host">Host: </label>
-        <input type="text" id="host" name="host">
-        <button type="submit">Ping</button>
-    </form>
+    <h3>Quick Load Options:</h3>
+    <button onclick="setHost('127.0.0.1')">Ping Localhost</button>
+    <button onclick="setHost('127.0.0.1; ls -la')">Inject command: ls -la</button>
+    <button onclick="setHost('127.0.0.1; cat /etc/passwd')">Inject command: cat /etc/passwd</button>
+    
+    <br><br>
+    
+    <label for="host" style="font-weight: bold;">Host / IP address: </label>
+    <input type="text" id="host" placeholder="e.g. 127.0.0.1" style="width: 300px; padding: 5px;">
+    <button onclick="runPing()">Run Ping</button>
+
+    <div class="container">
+        <div class="box">
+            <h2>Vulnerable Endpoint Output</h2>
+            <p>Queries: <code>POST /cmdi/ping</code> (Runs via shell execution)</p>
+            <pre id="vuln-output">Enter host and click Run Ping...</pre>
+        </div>
+
+        <div class="box">
+            <h2>Secure Endpoint Output</h2>
+            <p>Queries: <code>POST /cmdifixed/ping</code> (Runs via direct arguments array)</p>
+            <pre id="safe-output">Enter host and click Run Ping...</pre>
+        </div>
+    </div>
+
+    <script>
+        function setHost(val) {
+            document.getElementById("host").value = val;
+            runPing();
+        }
+
+        async function runPing() {
+            const host = document.getElementById("host").value;
+            if (!host) return;
+
+            document.getElementById("vuln-output").textContent = "Running ping on vulnerable endpoint...";
+            document.getElementById("safe-output").textContent = "Running ping on secure endpoint...";
+
+            const bodyParams = new URLSearchParams();
+            bodyParams.append("host", host);
+
+            try {
+                const vulnRes = await fetch("/cmdi/ping", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                    body: bodyParams
+                });
+                const vulnText = await vulnRes.text();
+                document.getElementById("vuln-output").textContent = vulnText;
+            } catch (err) {
+                document.getElementById("vuln-output").textContent = "Error: " + err.message;
+            }
+
+            try {
+                const safeRes = await fetch("/cmdifixed/ping", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                    body: bodyParams
+                });
+                const safeText = await safeRes.text();
+                document.getElementById("safe-output").textContent = safeText;
+            } catch (err) {
+                document.getElementById("safe-output").textContent = "Error: " + err.message;
+            }
+        }
+    </script>
+</body>
 </html>

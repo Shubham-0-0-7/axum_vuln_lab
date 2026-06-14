@@ -1,32 +1,92 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Secure CORS Lab</title>
+    <title>CORS / Cross-Origin Resource Sharing Lab</title>
+    <style>
+        .container { display: flex; gap: 20px; margin-top: 20px; }
+        .box { flex: 1; border: 1px solid #ccc; padding: 15px; background: #f9f9f9; border-radius: 4px; }
+        pre { white-space: pre-wrap; background: #eee; padding: 10px; border-radius: 4px; max-height: 400px; overflow-y: auto; font-family: monospace; }
+        .error { color: red; font-weight: bold; }
+        .success { color: green; font-weight: bold; }
+    </style>
 </head>
 <body>
-    <h1>Secure CORS Lab (Fixed)</h1>
+    <h1>Cross-Origin Resource Sharing (CORS) Lab (Secure Endpoint)</h1>
 
-    <h3>Simple Request (GET)</h3>
-    <button onclick="simpleRequest()">Fetch Resource (Safe)</button>
+    <h3>Actions:</h3>
+    <button onclick="runSimpleRequest()">Fetch Resource (GET)</button>
+    <button onclick="runPreflightRequest()">Update Resource (PUT)</button>
 
-    <h3>Preflighted Request (PUT)</h3>
-    <button onclick="preflightRequest()">Update Resource (Safe)</button>
+    <div class="container">
+        <!-- Vulnerable Output -->
+        <div class="box">
+            <h2>Vulnerable API Endpoint Output</h2>
+            <p>Target: <code>http://127.0.0.1:3001/api/resource</code> (Wildcard: <code>Access-Control-Allow-Origin: *</code>)</p>
+            <pre id="vuln-output">Click an action button...</pre>
+        </div>
 
-    <h3>Result:</h3>
-    <pre id="output">Click the button...</pre>
+        <!-- Secure Output -->
+        <div class="box">
+            <h2>Secure API Endpoint Output</h2>
+            <p>Target: <code>http://127.0.0.1:3001/api/safe-resource</code> (Strict Whitelist Validation)</p>
+            <pre id="safe-output">Click an action button...</pre>
+        </div>
+    </div>
 
     <script>
-        async function simpleRequest() {
+        async function runSimpleRequest() {
+            document.getElementById("vuln-output").textContent = "Fetching from vulnerable API...";
+            document.getElementById("safe-output").textContent = "Fetching from secure API...";
+
+            // 1. Vulnerable API
+            try {
+                const res = await fetch("http://127.0.0.1:3001/api/resource");
+                const data = await res.text();
+                const pre = document.getElementById("vuln-output");
+                pre.textContent = data;
+                pre.className = "success";
+            } catch (err) {
+                const pre = document.getElementById("vuln-output");
+                pre.textContent = "CORS Error: " + err.message;
+                pre.className = "error";
+            }
+
+            // 2. Secure API
             try {
                 const res = await fetch("http://127.0.0.1:3001/api/safe-resource");
                 const data = await res.text();
-                document.getElementById("output").textContent = data;
+                const pre = document.getElementById("safe-output");
+                pre.textContent = data;
+                pre.className = "success";
             } catch (err) {
-                document.getElementById("output").textContent = "CORS Error: " + err.message;
+                const pre = document.getElementById("safe-output");
+                pre.textContent = "CORS Error: " + err.message;
+                pre.className = "error";
             }
         }
 
-        async function preflightRequest() {
+        async function runPreflightRequest() {
+            document.getElementById("vuln-output").textContent = "Updating vulnerable API...";
+            document.getElementById("safe-output").textContent = "Updating secure API...";
+
+            // 1. Vulnerable API
+            try {
+                const res = await fetch("http://127.0.0.1:3001/api/resource", {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ name: "Hacker" })
+                });
+                const data = await res.text();
+                const pre = document.getElementById("vuln-output");
+                pre.textContent = data;
+                pre.className = "success";
+            } catch (err) {
+                const pre = document.getElementById("vuln-output");
+                pre.textContent = "CORS Error: " + err.message;
+                pre.className = "error";
+            }
+
+            // 2. Secure API
             try {
                 const res = await fetch("http://127.0.0.1:3001/api/safe-resource", {
                     method: "PUT",
@@ -34,9 +94,13 @@
                     body: JSON.stringify({ name: "Hacker" })
                 });
                 const data = await res.text();
-                document.getElementById("output").textContent = data;
+                const pre = document.getElementById("safe-output");
+                pre.textContent = data;
+                pre.className = "success";
             } catch (err) {
-                document.getElementById("output").textContent = "Preflight CORS Error: " + err.message;
+                const pre = document.getElementById("safe-output");
+                pre.textContent = "CORS Error: " + err.message;
+                pre.className = "error";
             }
         }
     </script>

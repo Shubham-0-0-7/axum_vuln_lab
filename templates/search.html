@@ -1,23 +1,101 @@
-<h1>Search Products</h1>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SQLi Search Lab</title>
+    <style>
+        .container { display: flex; gap: 20px; margin-top: 20px; }
+        .box { flex: 1; border: 1px solid #ccc; padding: 15px; background: #f9f9f9; border-radius: 4px; }
+        pre { white-space: pre-wrap; background: #eee; padding: 10px; border-radius: 4px; max-height: 400px; overflow-y: auto; font-family: monospace; }
+        .error { color: red; font-weight: bold; }
+        .success { color: green; font-weight: bold; }
+        .nav-links { margin-bottom: 20px; }
+        .nav-links a { margin-right: 15px; text-decoration: none; font-weight: bold; color: #0066cc; }
+    </style>
+</head>
+<body>
+    <div class="nav-links">
+        <a href="/">SQLi Login</a>
+        <a href="/search">SQLi Search</a>
+        <a href="/xss">XSS Lab</a>
+        <a href="/cors">CORS Lab</a>
+        <a href="/cmdi">CMDi Lab</a>
+        <a href="/lfi">LFI Lab</a>
+    </div>
 
-<h3>Vulnerable Search</h3>
+    <h1>SQL Injection (SQLi) - Product Search Lab</h1>
 
-<form action="/search" method="GET">
-    <input name="q" placeholder="Search">
+    <h3>Quick Load Options:</h3>
+    <button onclick="searchQuery('Laptop')">Normal Search: Laptop</button>
+    <button onclick="searchQuery('Laptop\' UNION SELECT username, password FROM users --')">Inject: Leak credentials (UNION SQLi)</button>
+    <button onclick="searchQuery('Laptop\' AND 1=0 --')">Inject: Boolean condition test</button>
 
-    <button type="submit">
-        Vulnerable Search
-    </button>
-</form>
+    <br><br>
 
-<hr>
+    <label for="query" style="font-weight: bold;">Search query: </label>
+    <input type="text" id="query" placeholder="e.g. Laptop" style="width: 300px; padding: 5px;">
+    <button onclick="runSearch()">Search</button>
 
-<h3>Secure Search</h3>
+    <div class="container">
+        <!-- Vulnerable Output -->
+        <div class="box">
+            <h2>Vulnerable Endpoint Output</h2>
+            <p>Queries: <code>GET /search?q=...</code> (Concatenated query string)</p>
+            <pre id="vuln-output">Enter query and click Search...</pre>
+        </div>
 
-<form action="/search-safe" method="GET">
-    <input name="q" placeholder="Search">
+        <!-- Secure Output -->
+        <div class="box">
+            <h2>Secure Endpoint Output</h2>
+            <p>Queries: <code>GET /search-safe?q=...</code> (Parameterized query)</p>
+            <pre id="safe-output">Enter query and click Search...</pre>
+        </div>
+    </div>
 
-    <button type="submit">
-        Secure Search
-    </button>
-</form>
+    <script>
+        function searchQuery(q) {
+            document.getElementById("query").value = q;
+            runSearch();
+        }
+
+        async function runSearch() {
+            const queryVal = document.getElementById("query").value;
+            if (!queryVal) return;
+
+            document.getElementById("vuln-output").textContent = "Searching on vulnerable endpoint...";
+            document.getElementById("safe-output").textContent = "Searching on secure endpoint...";
+
+            // 1. Fetch from vulnerable endpoint
+            try {
+                const vulnRes = await fetch(`/search?q=${encodeURIComponent(queryVal)}`);
+                const vulnText = await vulnRes.text();
+                const pre = document.getElementById("vuln-output");
+                pre.textContent = vulnText;
+                if (vulnText.startsWith("SQL Error")) {
+                    pre.className = "error";
+                } else {
+                    pre.className = "success";
+                }
+            } catch (err) {
+                document.getElementById("vuln-output").textContent = "Error: " + err.message;
+                document.getElementById("vuln-output").className = "error";
+            }
+
+            // 2. Fetch from secure endpoint
+            try {
+                const safeRes = await fetch(`/search-safe?q=${encodeURIComponent(queryVal)}`);
+                const safeText = await safeRes.text();
+                const pre = document.getElementById("safe-output");
+                pre.textContent = safeText;
+                if (safeText.startsWith("SQL Error")) {
+                    pre.className = "error";
+                } else {
+                    pre.className = "success";
+                }
+            } catch (err) {
+                document.getElementById("safe-output").textContent = "Error: " + err.message;
+                document.getElementById("safe-output").className = "error";
+            }
+        }
+    </script>
+</body>
+</html>
