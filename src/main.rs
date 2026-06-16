@@ -8,6 +8,7 @@ mod cmdi;
 mod cmdifixed;
 mod lfi;
 mod lfifixed;
+mod ssrf;
 
 use axum::{
     routing::{get, post},
