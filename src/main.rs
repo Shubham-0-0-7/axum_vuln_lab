@@ -9,6 +9,7 @@ mod cmdifixed;
 mod lfi;
 mod lfifixed;
 mod ssrf;
+mod ssrffixed;
 
 use axum::{
     routing::{get, post},
@@ -34,7 +35,10 @@ async fn main() {
         .route("/cmdifixed/ping", post(cmdifixed::ping_safe))
         .route("/lfi", get(lfi::lfi_page))
         .route("/lfi/read", get(lfi::read_file))
-        .route("/lfi-safe/read", get(lfifixed::read_file_safe));
+        .route("/lfi-safe/read", get(lfifixed::read_file_safe))
+        .route("/ssrf", get(ssrf::ssrf_page))
+        .route("/ssrf/fetch", get(ssrf::fetch_url))
+        .route("/ssrf-safe/fetch", get(ssrffixed::fetch_url_safe));
     let listener = tokio::net::TcpListener::bind("127.0.0.1:3000")
         .await
         .unwrap();

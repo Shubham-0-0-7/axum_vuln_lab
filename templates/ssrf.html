@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SSRF / Server-Side Request Forgery Lab</title>
+    <style>
+        .container { display: flex; gap: 20px; margin-top: 20px; }
+        .box { flex: 1; border: 1px solid #ccc; padding: 15px; background: #f9f9f9; border-radius: 4px; }
+        pre { white-space: pre-wrap; background: #eee; padding: 10px; border-radius: 4px; max-height: 400px; overflow-y: auto; font-family: monospace; }
+        .error { color: red; font-weight: bold; }
+        .success { color: green; font-weight: bold; }
+        .nav-links { margin-bottom: 20px; }
+        .nav-links a { margin-right: 15px; text-decoration: none; font-weight: bold; color: #0066cc; }
+    </style>
+</head>
+<body>
+    <div class="nav-links">
+        <a href="/">SQLi Login</a>
+        <a href="/search">SQLi Search</a>
+        <a href="/xss">XSS Lab</a>
+        <a href="/cors">CORS Lab</a>
+        <a href="/cmdi">CMDi Lab</a>
+        <a href="/lfi">LFI Lab</a>
+        <a href="/ssrf">SSRF Lab</a>
+    </div>
+
+    <h1>Server-Side Request Forgery (SSRF) Lab</h1>
+
+    <h3>Quick Load Options:</h3>
+    <button onclick="setQuery('https://httpbin.org/ip')">Normal Fetch: httpbin.org</button>
+    <button onclick="setQuery('http://127.0.0.1:3001/api/resource')">SSRF: Fetch Local API (127.0.0.1)</button>
+    <button onclick="setQuery('http://localhost:3001/api/resource')">SSRF: Fetch Local API (localhost)</button>
+    
+    <br><br>
+
+    <label for="url" style="font-weight: bold;">Target URL: </label>
+    <input type="text" id="url" placeholder="e.g. https://httpbin.org/ip" style="width: 400px; padding: 5px;">
+    <button onclick="fetchUrls()">Fetch URL</button>
+
+    <div class="container">
+        <!-- Vulnerable Output -->
+        <div class="box">
+            <h2>Vulnerable Endpoint Output</h2>
+            <p>Queries: <code>GET /ssrf/fetch?url=...</code> (Unchecked HTTP client request)</p>
+            <pre id="vuln-output">Enter a URL and click Fetch...</pre>
+        </div>
+
+        <!-- Secure Output -->
+        <div class="box">
+            <h2>Secure Endpoint Output</h2>
+            <p>Queries: <code>GET /ssrf-safe/fetch?url=...</code> (Strict IP resolution whitelist validation)</p>
+            <pre id="safe-output">Enter a URL and click Fetch...</pre>
+        </div>
+    </div>
+
+    <script>
+        function setQuery(val) {
+            document.getElementById("url").value = val;
+            fetchUrls();
+        }
+
+        async function fetchUrls() {
+            const urlVal = document.getElementById("url").value;
+            if (!urlVal) return;
+
+            document.getElementById("vuln-output").textContent = "Fetching on vulnerable endpoint...";
+            document.getElementById("safe-output").textContent = "Fetching on secure endpoint...";
+
+            // 1. Fetch from vulnerable endpoint
+            try {
+                const vulnRes = await fetch(`/ssrf/fetch?url=${encodeURIComponent(urlVal)}`);
+                const vulnText = await vulnRes.text();
+                const pre = document.getElementById("vuln-output");
+                pre.textContent = vulnText;
+                if (vulnRes.ok && !vulnText.startsWith("Error")) {
+                    pre.className = "success";
+                } else {
+                    pre.className = "error";
+                }
+            } catch (err) {
+                document.getElementById("vuln-output").textContent = "Error: " + err.message;
+                document.getElementById("vuln-output").className = "error";
+            }
+
+            // 2. Fetch from secure endpoint
+            try {
+                const safeRes = await fetch(`/ssrf-safe/fetch?url=${encodeURIComponent(urlVal)}`);
+                const safeText = await safeRes.text();
+                const pre = document.getElementById("safe-output");
+                pre.textContent = safeText;
+                if (safeRes.ok) {
+                    pre.className = "success";
+                } else {
+                    pre.className = "error";
+                }
+            } catch (err) {
+                document.getElementById("safe-output").textContent = "Error: " + err.message;
+                document.getElementById("safe-output").className = "error";
+            }
+        }
+    </script>
+</body>
+</html>
