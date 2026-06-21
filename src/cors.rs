@@ -1,4 +1,4 @@
-use axum::{response::Html, Router, routing::{get, put, options}};
+use axum::{response::Html, Router, routing::{get}};
 use tokio::net::TcpListener;
 use axum::http::{HeaderMap, HeaderValue};
 
