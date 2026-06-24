@@ -10,6 +10,8 @@ mod lfi;
 mod lfifixed;
 mod ssrf;
 mod ssrffixed;
+mod idor;
+mod idorfixed;
 
 use axum::{
     routing::{get, post},
@@ -18,6 +20,7 @@ use axum::{
 
 #[tokio::main]
 async fn main() {
+    idor::init_db().await;
     let app = Router::new()
         .route("/", get(sqli::index))
         .route("/search", get(sqli::search))
@@ -38,7 +41,10 @@ async fn main() {
         .route("/lfi-safe/read", get(lfifixed::read_file_safe))
         .route("/ssrf", get(ssrf::ssrf_page))
         .route("/ssrf/fetch", get(ssrf::fetch_url))
-        .route("/ssrf-safe/fetch", get(ssrffixed::fetch_url_safe));
+        .route("/ssrf-safe/fetch", get(ssrffixed::fetch_url_safe))
+        .route("/idor", get(idor::idor_page))
+        .route("/idor/invoice", get(idor::get_invoice))
+        .route("/idor-safe/invoice", get(idorfixed::get_invoice_safe));
     let listener = tokio::net::TcpListener::bind("127.0.0.1:3000")
         .await
         .unwrap();

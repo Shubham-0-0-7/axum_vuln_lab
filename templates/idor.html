@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>IDOR / Insecure Direct Object Reference Lab</title>
+    <style>
+        .container { display: flex; gap: 20px; margin-top: 20px; }
+        .box { flex: 1; border: 1px solid #ccc; padding: 15px; background: #f9f9f9; border-radius: 4px; }
+        pre { white-space: pre-wrap; background: #eee; padding: 10px; border-radius: 4px; max-height: 400px; overflow-y: auto; font-family: monospace; }
+        .error { color: red; font-weight: bold; }
+        .success { color: green; font-weight: bold; }
+        .nav-links { margin-bottom: 20px; }
+        .nav-links a { margin-right: 15px; text-decoration: none; font-weight: bold; color: #0066cc; }
+    </style>
+</head>
+<body>
+    <div class="nav-links">
+        <a href="/">SQLi Login</a>
+        <a href="/search">SQLi Search</a>
+        <a href="/xss">XSS Lab</a>
+        <a href="/cors">CORS Lab</a>
+        <a href="/cmdi">CMDi Lab</a>
+        <a href="/lfi">LFI Lab</a>
+        <a href="/ssrf">SSRF Lab</a>
+        <a href="/idor">IDOR Lab</a>
+    </div>
+
+    <h1>Insecure Direct Object Reference (IDOR) Lab</h1>
+
+    <div style="background: #eef; padding: 15px; border-radius: 4px; margin-bottom: 20px; width: 350px;">
+        <h3>Select Active User Session:</h3>
+        <select id="user-session" style="width: 100%; padding: 5px; font-size: 15px;">
+            <option value="1">Logged in as Alice (User ID: 1)</option>
+            <option value="2">Logged in as Bob (User ID: 2)</option>
+        </select>
+    </div>
+
+    <h3>Fetch Invoice:</h3>
+    <button onclick="setInvoice(1)">Alice's Invoice #1</button>
+    <button onclick="setInvoice(2)">Alice's Invoice #2</button>
+    <button onclick="setInvoice(3)">Bob's Invoice #3</button>
+    
+    <br><br>
+    
+    <label for="invoice-id" style="font-weight: bold;">Custom Invoice ID: </label>
+    <input type="number" id="invoice-id" placeholder="e.g. 1" style="width: 80px; padding: 5px;">
+    <button onclick="fetchInvoice()">Fetch</button>
+
+    <div class="container">
+        <!-- Vulnerable Output -->
+        <div class="box">
+            <h2>Vulnerable Endpoint Output</h2>
+            <p>Queries: <code>GET /idor/invoice?id=...</code> (No owner validation)</p>
+            <pre id="vuln-output">Fetch an invoice to see results...</pre>
+        </div>
+
+        <!-- Secure Output -->
+        <div class="box">
+            <h2>Secure Endpoint Output</h2>
+            <p>Queries: <code>GET /idor-safe/invoice?id=...</code> (Asserts: owner_id == request.user_id)</p>
+            <pre id="safe-output">Fetch an invoice to see results...</pre>
+        </div>
+    </div>
+
+    <script>
+        function setInvoice(id) {
+            document.getElementById("invoice-id").value = id;
+            fetchInvoice();
+        }
+
+        async function fetchInvoice() {
+            const invoiceId = document.getElementById("invoice-id").value;
+            const userId = document.getElementById("user-session").value;
+            if (!invoiceId) return;
+
+            document.getElementById("vuln-output").textContent = "Fetching invoice from vulnerable endpoint...";
+            document.getElementById("safe-output").textContent = "Fetching invoice from secure endpoint...";
+
+            // 1. Fetch from vulnerable endpoint
+            try {
+                const vulnRes = await fetch(`/idor/invoice?id=${invoiceId}`);
+                const vulnText = await vulnRes.text();
+                const pre = document.getElementById("vuln-output");
+                pre.textContent = vulnText;
+                if (vulnRes.ok && !vulnText.startsWith("Error")) {
+                    pre.className = "success";
+                } else {
+                    pre.className = "error";
+                }
+            } catch (err) {
+                document.getElementById("vuln-output").textContent = "Error: " + err.message;
+                document.getElementById("vuln-output").className = "error";
+            }
+
+            // 2. Fetch from secure endpoint (Sends X-User-Id header to authenticate)
+            try {
+                const safeRes = await fetch(`/idor-safe/invoice?id=${invoiceId}`, {
+                    headers: { "X-User-Id": userId }
+                });
+                const safeText = await safeRes.text();
+                const pre = document.getElementById("safe-output");
+                pre.textContent = safeText;
+                if (safeRes.ok) {
+                    pre.className = "success";
+                } else {
+                    pre.className = "error";
+                }
+            } catch (err) {
+                document.getElementById("safe-output").textContent = "Error: " + err.message;
+                document.getElementById("safe-output").className = "error";
+            }
+        }
+    </script>
+</body>
+</html>

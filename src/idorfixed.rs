@@ -23,7 +23,7 @@ pub async fn get_invoice_safe(Query(params):Query<InvoiceParams>, headers: Heade
                 Err(_) => return (StatusCode::BAD_REQUEST, "Invalid X-User-Id header encoding".to_string()).into_response(),
             }
         }
-        None=>return (StatusCode::UNAUTHORIZED, "missing auth header x-user-id. please select a user session".to_string().into_response(),)
+        None => return (StatusCode::UNAUTHORIZED, "Missing authentication header X-User-Id. Please select a user session.".to_string()).into_response(),
     };
 
     let conn = match Connection::open("db/app.db"){
@@ -31,7 +31,7 @@ pub async fn get_invoice_safe(Query(params):Query<InvoiceParams>, headers: Heade
         Err(err)=>return (StatusCode::INTERNAL_SERVER_ERROR, format!("database conenction error: {}", err)).into_response(),
     };
 
-    let mut stmt = match conn.prepare("SELECT id, user_id, amount, description, date FROM invoice WHERE id = ?"){
+    let mut stmt = match conn.prepare("SELECT id, user_id, amount, description, date FROM invoices WHERE id = ?"){
         Ok(s)=>s,
         Err(err)=>return (StatusCode::INTERNAL_SERVER_ERROR, format!("sql prepare error: {}", err)).into_response(),
     };
